@@ -9,7 +9,7 @@ API_KEY  = os.getenv("API_KEY")
 if not BASE_URL or not API_KEY:
     raise ValueError("Не найдены BASE_URL или API_KEY в файле .env")
 
-QUESTION = "Что такое большая языковая модель? Объясни в двух предложениях."
+QUESTION = input("Ваш вопрос: ")
 
 headers = {
     "Authorization": f"Bearer {API_KEY}",
