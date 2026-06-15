@@ -1,0 +1,8 @@
+# Секреты — никогда не коммитить
+.env
+.env.local
+.env.*.local
+
+# Кэш Python
+__pycache__/
+*.pyc
