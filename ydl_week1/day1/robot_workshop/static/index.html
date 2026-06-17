@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Robot Workshop</title>
+  <!-- Sci-fi fonts from Google Fonts CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- CRT scanline overlay -->
+<div id="scanlines"></div>
+
+<!-- ══ TUTORIAL OVERLAY (shown on first load, re-openable via ?) ══════ -->
+<div id="tutorial-overlay">
+  <div id="tutorial-box">
+    <h2 class="phase-title" style="font-size:1.3rem">HOW TO PLAY</h2>
+
+    <div class="tut-steps">
+      <div class="tut-step">
+        <div class="tut-num">1</div>
+        <div>
+          <strong>Pick a mission</strong><br>
+          Read the contract carefully. It tells you what the robot must <em>do</em> and what it <em>needs</em> — strength (torque), sensors, and a power limit.
+        </div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">2</div>
+        <div>
+          <strong>Drag parts onto the chassis</strong><br>
+          The left panel is your parts store. Each part costs credits. Drag a part card into one of the 6 chassis slots to add it to your robot.
+        </div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">3</div>
+        <div>
+          <strong>Watch the Build Analysis panel</strong><br>
+          It updates live. Green bars = requirement met. Red = something's missing or over the limit. Fix it before deploying.
+        </div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">4</div>
+        <div>
+          <strong>Deploy and earn credits</strong><br>
+          Hit ⚡ DEPLOY ROBOT. Pass the test and you earn the contract reward. Leftover budget = efficiency bonus!
+        </div>
+      </div>
+    </div>
+
+    <div class="tut-glossary">
+      <div class="tut-glos-title">GLOSSARY</div>
+      <div class="tut-glos-grid">
+        <div class="tut-term">
+          <span class="tut-term-name">🔩 TORQUE</span>
+          <span class="tut-term-def">How strong your robot is — its ability to push, pull, or lift. Motors add torque. More motors = more torque.</span>
+        </div>
+        <div class="tut-term">
+          <span class="tut-term-name">⚡ POWER DRAW</span>
+          <span class="tut-term-def">Total watts all your parts consume. Every part uses power. Stay <em>under</em> the contract's limit or the circuit overloads.</span>
+        </div>
+        <div class="tut-term">
+          <span class="tut-term-name">👁 SENSORS</span>
+          <span class="tut-term-def">Sensors let the robot perceive its environment. Line sensor = sees floor markings. Camera = sees objects. Grip sensor = in the gripper arm.</span>
+        </div>
+        <div class="tut-term">
+          <span class="tut-term-name">💰 CREDITS</span>
+          <span class="tut-term-def">Your shopping budget. You start each round with 200 cr. Leftover credits after a successful build earn you bonus score points.</span>
+        </div>
+      </div>
+    </div>
+
+    <button id="tut-close-btn">✅ GOT IT — LET'S BUILD!</button>
+  </div>
+</div>
+
+<!-- ══ HUD ══════════════════════════════════════════════════════════ -->
+<header id="hud">
+  <div class="hud-brand">⚙ ROBOT<br>WORKSHOP</div>
+  <div class="hud-center">
+    <div class="hud-pill">ROUND <span id="hud-round">1</span>/<span id="hud-maxrounds">3</span></div>
+    <div class="hud-pill">SCORE <span id="hud-score" class="hud-val">0</span></div>
+    <div class="hud-pill">BEST&nbsp; <span id="hud-best"  class="hud-val">0</span></div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <div class="hud-pill hud-credits">💰 <span id="hud-credits">200</span> CR</div>
+    <button id="help-btn" title="How to play">?</button>
+  </div>
+</header>
+
+<!-- ══ PHASE: CONTRACT SELECT ════════════════════════════════════════ -->
+<div id="phase-contract">
+  <div id="phase-contract-inner">
+    <h2 class="phase-title">SELECT YOUR MISSION</h2>
+    <p  class="phase-sub">Harder contracts pay more. Choose wisely — you only have 200 credits.</p>
+    <div id="contract-loading" class="pulse">📡 Receiving transmissions from HQ…</div>
+    <div id="contract-cards-grid" hidden></div>
+  </div>
+</div>
+
+<!-- ══ PHASE: BUILD ══════════════════════════════════════════════════ -->
+<main id="phase-build" class="hidden">
+
+  <!-- LEFT ── Parts inventory -->
+  <aside id="panel-parts">
+    <div class="panel-hdr">PARTS INVENTORY</div>
+    <div id="budget-bar">
+      <span class="lbl">BUDGET REMAINING</span>
+      <div id="budget-display">
+        <span id="credits-display">200</span>
+        <span class="lbl">CR</span>
+      </div>
+      <div id="budget-track"><div id="budget-fill"></div></div>
+    </div>
+    <div id="parts-list"><!-- part cards injected by game.js --></div>
+  </aside>
+
+  <!-- CENTER ── Chassis / workshop floor -->
+  <section id="panel-chassis">
+    <!-- Active contract reminder with plain-English explanations -->
+    <div id="contract-reminder">
+      <div id="reminder-title">—</div>
+      <div id="reminder-reqs"></div>
+      <!-- Expanded requirement explanations injected by game.js -->
+      <div id="reminder-explanations"></div>
+    </div>
+
+    <div class="panel-hdr">
+      CHASSIS &nbsp;
+      <span id="slots-label"><span id="slots-used">0</span>/6 SLOTS</span>
+    </div>
+
+    <div id="chassis-zone">
+      <!-- 6 droppable slots injected by game.js -->
+    </div>
+
+    <button id="test-btn" disabled>⚡ DEPLOY ROBOT</button>
+  </section>
+
+  <!-- RIGHT ── Live build stats -->
+  <aside id="panel-stats">
+    <div class="panel-hdr">BUILD ANALYSIS</div>
+
+    <!-- Torque bar -->
+    <div class="stat-group" id="sg-torque">
+      <div class="stat-row-label">
+        <span class="stat-name">TORQUE</span>
+        <span class="stat-vals"><span id="val-torque">0</span> / need <span id="req-torque">?</span></span>
+      </div>
+      <div class="stat-track">
+        <div id="bar-torque"  class="stat-fill"></div>
+        <div id="mark-torque" class="stat-mark"></div>
+      </div>
+    </div>
+
+    <!-- Power bar -->
+    <div class="stat-group" id="sg-power">
+      <div class="stat-row-label">
+        <span class="stat-name">POWER DRAW</span>
+        <span class="stat-vals"><span id="val-power">0</span>W / max <span id="req-power">?</span>W</span>
+      </div>
+      <div class="stat-track">
+        <div id="bar-power"  class="stat-fill power"></div>
+        <div id="mark-power" class="stat-mark"></div>
+      </div>
+    </div>
+
+    <!-- Sensor checklist -->
+    <div class="stat-group">
+      <div class="stat-row-label"><span class="stat-name">SENSORS</span></div>
+      <div id="senses-list"><!-- badges injected --></div>
+    </div>
+
+    <!-- Part cost -->
+    <div class="stat-group">
+      <div class="stat-row-label">
+        <span class="stat-name">PARTS COST</span>
+        <span class="stat-vals accent" id="cost-display">0 CR</span>
+      </div>
+    </div>
+
+    <div id="verdict" class="verdict neutral">Build something first!</div>
+
+    <!-- Specific hints shown when a requirement isn't met -->
+    <div id="hints-box" class="hidden">
+      <div class="hints-title">💡 HINTS</div>
+      <div id="hints-list"></div>
+    </div>
+  </aside>
+
+</main>
+
+<!-- ══ PHASE: TEST / RESULT ══════════════════════════════════════════ -->
+<div id="phase-test" class="hidden">
+
+  <!-- Robot track animation -->
+  <div id="track">
+    <div id="track-bg"></div>
+    <div id="track-line"></div>
+    <div id="robot-sprite">🤖</div>
+    <div id="sparks"  class="hidden">✨✨✨</div>
+    <div id="explode" class="hidden">💥</div>
+  </div>
+
+  <!-- Inspector review -->
+  <div id="review-panel" class="hidden">
+    <div id="review-header"></div>
+    <p id="review-text"></p>
+    <div id="score-earned" class="hidden"></div>
+    <button id="next-btn" class="hidden">NEXT CONTRACT →</button>
+  </div>
+
+</div>
+
+<!-- ══ PHASE: GAME OVER ═══════════════════════════════════════════════ -->
+<div id="phase-gameover" class="hidden">
+  <div id="gameover-box">
+    <h2 class="phase-title">SESSION COMPLETE</h2>
+    <div id="final-score"></div>
+    <div id="new-record" class="hidden accent">⭐ NEW HIGH SCORE! ⭐</div>
+    <button id="restart-btn">⚙ NEW SESSION</button>
+  </div>
+</div>
+
+<!-- Particle / FX layer (populated by JS) -->
+<div id="fx-layer"></div>
+
+<script src="/static/game.js"></script>
+</body>
+</html>
